@@ -9,7 +9,7 @@ function getCorporateLimitsByUserNo(args) {
                     "type": "users_limits_config", 
                     "query": {
                         "match": {
-                        "user_no":"23456789041"
+                        "user_no": args.user_no
                         }
                     } 
                 }
@@ -28,7 +28,7 @@ function getusersLimitsForCorporate(args) {
                     "type": "limits_config", 
                     "query": {
                         "match": {
-                        "domain":"9000000001"
+                        "domain": args.domain
                         }
                     },
                     inner_hits: {				   
@@ -48,7 +48,7 @@ function getusersLimitsById(args) {
         body: {
              "query":{
                 "match":{
-                    "user_no":"23456789041"
+                    "user_no": args.user_no
                 }
             }
         }
@@ -63,14 +63,36 @@ function getCorporateLimitsById(args) {
         body: {
              "query":{
                 "match":{
-                    "domain":"9000000001"
+                    "domain": args.domain
                 }
             }
         }
     }
 };
-
-function getUnitLevelLimits(args) {
+function getLimitsForSpecificCorporateUnit(args) {
+    return {
+        index: 'limits', 
+        type: 'limits_config',                                 
+        body: {
+             "query": {
+                "nested": {
+                "path": "unit",
+                "query": {
+                    "bool": {
+                    "must": [
+                        { "match": { "unit.limit_value": args.limit_value }},
+                        { "match": { "unit.domain": args.domain }}
+                    ]
+                    }
+                },
+                "inner_hits" :{
+                }
+                }
+            }
+        }
+    }
+};
+function getLimitsForSpecificUserUnit(args) {
     return {
         index: 'limits', 
         type: 'users_limits_config',                                 
@@ -81,7 +103,53 @@ function getUnitLevelLimits(args) {
                 "query": {
                     "bool": {
                     "must": [
-                        { "match": { "unit.limit_value": "IGTB01" }}
+                         { "match": { "unit.limit_value": args.limit_value }},
+                        { "match": { "unit.user_no": args.user_no }}
+                    ]
+                    }
+                },
+                "inner_hits" :{
+                }
+                }
+            }
+        }
+    }
+};
+function getUnitLevelLimitsForSpeciificUser(args) {
+    return {
+        index: 'limits', 
+        type: 'users_limits_config',                                 
+        body: {
+             "query": {
+                "nested": {
+                "path": "unit",
+                "query": {
+                    "bool": {
+                    "must": [
+                        { "match": { "unit.user_no": args.user_no }}
+                    ]
+                    }
+                },
+                "inner_hits" :{
+                }
+                }
+            }
+        }
+    }
+};
+
+function getUnitLevelLimitsForSpecificCorporate(args) {
+    return {
+        index: 'limits', 
+        type: 'limits_config',                                 
+        body: {
+             "query": {
+                "nested": {
+                "path": "unit",
+                "query": {
+                    "bool": {
+                    "must": [
+                         { "match": { "unit.domain": args.domain }}
                     ]
                     }
                 },
@@ -98,7 +166,10 @@ function getUnitLevelLimits(args) {
 module.exports = {
     getCorporateLimitsById : getCorporateLimitsById,
     getusersLimitsById : getusersLimitsById,
-    getUnitLevelLimits : getUnitLevelLimits,
     getusersLimitsForCorporate : getusersLimitsForCorporate,
-    getCorporateLimitsByUserNo : getCorporateLimitsByUserNo
+    getCorporateLimitsByUserNo : getCorporateLimitsByUserNo,
+    getLimitsForSpecificCorporateUnit :getLimitsForSpecificCorporateUnit,
+    getLimitsForSpecificUserUnit : getLimitsForSpecificUserUnit,
+    getUnitLevelLimitsForSpecificCorporate : getUnitLevelLimitsForSpecificCorporate,
+    getUnitLevelLimitsForSpeciificUser : getUnitLevelLimitsForSpeciificUser
 };

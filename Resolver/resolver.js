@@ -27,7 +27,8 @@ const resolvers = {
             getCorporateLimitsByUserNo(_,args){                                      
                 return elasticClient.search(
                     elasticQuery.getCorporateLimitsByUserNo(args)
-             ).then(function(data){                                       
+             ).then(function(data){    
+                 console.log("data-->" +JSON.stringify(data.hits.hits.length));                                   
                      var corporateLimitsList = [];
                     for(var counter=0; counter < data.hits.hits.length ; counter++){
                         corporateLimitsList[counter]=data.hits.hits[counter]["_source"];
@@ -51,17 +52,62 @@ const resolvers = {
                     console.trace(error.message)
                 }); 
             },  
-            //get user imits for specific corporate based on unit provided
-             getUnitLevelLimits(_,args){                                      
+            //get user limits for specific corporate and specific unit provided
+             getLimitsForSpecificCorporateUnit(_,args){                                      
                 return elasticClient.search(
-                    elasticQuery.getUnitLevelLimits(args)
+                    elasticQuery.getLimitsForSpecificCorporateUnit(args)
              ).then(function(data){
                 // console.log("data : " +JSON.stringify(data));                                       
-                    var UnitLimitsList = [];
+                    var corporateUnitLimitsList = [];
                         for(var counter=0; counter < data.hits.hits[0]["inner_hits"].unit.hits.hits.length ; counter++){
-                            UnitLimitsList[counter]=data.hits.hits[0]["inner_hits"].unit.hits.hits[counter]["_source"];
+                            corporateUnitLimitsList[counter]=data.hits.hits[0]["inner_hits"].unit.hits.hits[counter]["_source"];
                         }
-                        return UnitLimitsList;                                                      
+                        return corporateUnitLimitsList;                                                      
+                },function (error) {
+                    console.trace(error.message)
+                }); 
+            },
+            //get user limits for specific corporate based on corporate ID provided
+            getLimitsForSpecificCorporateUnit(_,args){                                      
+                return elasticClient.search(
+                    elasticQuery.getLimitsForSpecificCorporateUnit(args)
+             ).then(function(data){
+                // console.log("data : " +JSON.stringify(data));                                       
+                    var corporateUnitLimitsList = [];
+                        for(var counter=0; counter < data.hits.hits[0]["inner_hits"].unit.hits.hits.length ; counter++){
+                            corporateUnitLimitsList[counter]=data.hits.hits[0]["inner_hits"].unit.hits.hits[counter]["_source"];
+                        }
+                        return corporateUnitLimitsList;                                                      
+                },function (error) {
+                    console.trace(error.message)
+                }); 
+            },
+             //get user limits for specific user based on user_no provided
+             getUnitLevelLimitsForSpeciificUser(_,args){                                      
+                return elasticClient.search(
+                    elasticQuery.getUnitLevelLimitsForSpeciificUser(args)
+             ).then(function(data){
+                // console.log("data : " +JSON.stringify(data));                                       
+                    var userUnitLimitsList = [];
+                        for(var counter=0; counter < data.hits.hits[0]["inner_hits"].unit.hits.hits.length ; counter++){
+                            userUnitLimitsList[counter]=data.hits.hits[0]["inner_hits"].unit.hits.hits[counter]["_source"];
+                        }
+                        return userUnitLimitsList;                                                      
+                },function (error) {
+                    console.trace(error.message)
+                }); 
+            },
+            //get user limits for specific user and specific unit provided
+             getLimitsForSpecificUserUnit(_,args){                                      
+                return elasticClient.search(
+                    elasticQuery.getLimitsForSpecificUserUnit(args)
+             ).then(function(data){
+                // console.log("data : " +JSON.stringify(data));                                       
+                    var userUnitLimitsList = [];
+                        for(var counter=0; counter < data.hits.hits[0]["inner_hits"].unit.hits.hits.length ; counter++){
+                            userUnitLimitsList[counter]=data.hits.hits[0]["inner_hits"].unit.hits.hits[counter]["_source"];
+                        }
+                        return userUnitLimitsList;                                                      
                 },function (error) {
                     console.trace(error.message)
                 }); 
@@ -83,8 +129,9 @@ const resolvers = {
         },
         unit(obj, args){                                                             
                return elasticClient.search(
-                   elasticQuery.getUnitLevelLimits(obj)
-               ).then(function(data){                    
+                   elasticQuery.getUnitLevelLimitsForSpecificCorporate(obj)
+               ).then(function(data){   
+                   //console.log("data---->" + JSON.stringify(data.hits.hits[0]["inner_hits"]));                 
                     var UnitLimitsList = [];
                         for(var counter=0; counter < data.hits.hits[0]["inner_hits"].unit.hits.hits.length ; counter++){
                             UnitLimitsList[counter]=data.hits.hits[0]["inner_hits"].unit.hits.hits[counter]["_source"];
@@ -108,7 +155,7 @@ const resolvers = {
         },
         unit(obj, args){                                                             
                return elasticClient.search(
-                   elasticQuery.getUnitLevelLimits(obj)
+                   elasticQuery.getUnitLevelLimitsForSpeciificUser(obj)
                ).then(function(data){                    
                    var UnitLimitsList = [];
                         for(var counter=0; counter < data.hits.hits[0]["inner_hits"].unit.hits.hits.length ; counter++){
@@ -120,10 +167,26 @@ const resolvers = {
                 });                             
         },
     },
-    units:{
+    corporateunits:{
         limitAttributes(obj,args){                                   
               return elasticClient.search(
-                  elasticQuery.getUnitLevelLimits(obj)
+                  elasticQuery.getLimitsForSpecificCorporateUnit(obj)
+              ).then(function(data){                    
+                     var LimitAttributeList = [];
+                     //console.log("data : " +JSON.stringify(data));
+                        for(var counter=0; counter < data.hits.hits[0]["inner_hits"].unit.hits.hits[0]["_source"]["limits_attributes"].length ; counter++){
+                            LimitAttributeList[counter]=data.hits.hits[0]["inner_hits"].unit.hits.hits[0]["_source"]["limits_attributes"][counter];
+                        }
+                        return LimitAttributeList;                                     
+                },function (error) {
+                    console.trace(error.message)
+                });             
+        },
+    },
+    userunits:{
+        limitAttributes(obj,args){                                   
+              return elasticClient.search(
+                  elasticQuery.getLimitsForSpecificUserUnit(obj)
               ).then(function(data){                    
                      var LimitAttributeList = [];
                         for(var counter=0; counter < data.hits.hits[0]["inner_hits"].unit.hits.hits[0]["_source"]["limits_attributes"].length ; counter++){
